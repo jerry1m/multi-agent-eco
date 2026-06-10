@@ -347,34 +347,6 @@ class BaseAgent(ABC):
 
 ---
 
-### Go 版：goroutine 并行（高并发）
-
-**文件**：[`go/orchestrator/supervisor.go`](go/orchestrator/supervisor.go)
-
-```go
-func (s *Supervisor) Recommend(ctx context.Context, req *model.RecommendRequest) (*model.RecommendResponse, error) {
-    var wg sync.WaitGroup
-    
-    // goroutine 并行：用户画像 + 商品召回
-    wg.Add(2)
-    go func() {
-        defer wg.Done()
-        profile, _ = s.UserProfileAgent.Run(ctx, req.UserID)
-    }()
-    go func() {
-        defer wg.Done()
-        products, _ = s.ProductRecAgent.Run(ctx, req.NumItems*2)
-    }()
-    wg.Wait()  // 等两个 goroutine 都完成
-    
-    // 串行：文案生成
-    copies, _ = s.MarketingCopyAgent.Run(ctx, profile, products)
-    return &model.RecommendResponse{Products: products, Copies: copies}, nil
-}
-```
-
----
-
 ## 🚀 快速上手运行
 
 ### 前置条件
