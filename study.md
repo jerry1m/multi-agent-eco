@@ -618,3 +618,58 @@ def test_thompson_sampling():
 │  → 提升 = (9.2-8.0)/8.0 = 15% ✓                          │
 └─────────────────────────────────────────────────────────┘
 ```
+
+
+## `/api/v1/recommend/graph` 接口说明
+
+这个接口是**基于 LangGraph 状态图的推荐 pipeline**，作为推荐系统的**第二种实现方式**（对比 `/api/v1/recommend` 的 Supervisor 编排方式）。
+
+### 核心流程（DAG 状态图）
+
+整个推荐过程被组织成一个有向无环图，分阶段执行：
+
+```
+init → parallel_phase1 → parallel_phase2 → filter → marketing_copy → aggregate → END
+```
+
+| 阶段 | 执行内容 | 说明 |
+|------|---------|------|
+| **init** | 初始化 | 生成 `request_id`、分配 A/B 实验组 |
+| **parallel_phase1** | 🚀 **并行执行** | `UserProfileAgent`（用户画像）+ `ProductRecAgent`（商品召回）同时运行 |
+| **parallel_phase2** | 🚀 **并行执行** | `Rerank`（重排序）+ `InventoryAgent`（库存过滤）同时运行 |
+| **filter** | 过滤 | 根据库存筛选最终商品列表 |
+| **marketing_copy** | 营销文案 | `MarketingCopyAgent` 生成个性化营销文案 |
+| **aggregate** | 汇总 | 计算总耗时，组装最终结果 |
+
+### 请求示例
+
+```json
+{
+  "user_id": "user_001",
+  "scene": "homepage",
+  "num_items": 10,
+  "context": {"device": "mobile"}
+}
+```
+
+### 响应示例
+
+```json
+{
+  "request_id": "uuid",
+  "user_id": "user_001",
+  "products": [...],
+  "marketing_copies": [...],
+  "experiment_group": "control",
+  "total_latency_ms": 1234.5
+}
+```
+
+### 与 `/api/v1/recommend` 的区别
+
+| 端点 | 编排方式 | 用途 |
+|------|---------|------|
+| `POST /api/v1/recommend` | Supervisor（集中调度） | **生产推荐**，由 Supervisor 统一协调 Agent |
+| `POST /api/v1/recommend/graph` | LangGraph 状态图 | **展示 LangGraph 能力**，用状态机 DAG 驱动流程 |
+
+简单来说，这个接口通过 **LangGraph 定义的有向无环图**，将多个 Agent 组织成一个高效的并行 pipeline，完成从用户画像分析 → 商品召回 → 排序 → 库存过滤 → 营销文案生成的完整推荐链路。⚡

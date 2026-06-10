@@ -1,28 +1,7 @@
 # 🛒 多Agent电商推荐与营销系统
 
-> **面向小白的企业级 AI Agent 项目** — 从零理解 Multi-Agent 架构，配套三语言代码 + 八股文 + 简历模板 + STAR面试话术，找工作全流程覆盖。
-
 [![Python](https://img.shields.io/badge/Python-3.11%2B-blue?logo=python)](python/)
-[![Java](https://img.shields.io/badge/Java-17%2B-orange?logo=java)](java/)
-[![Go](https://img.shields.io/badge/Go-1.22%2B-00ADD8?logo=go)](go/)
 [![License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
-
----
-
-## 📖 目录
-
-1. [这个项目是什么？](#-这个项目是什么)
-2. [系统架构（看图秒懂）](#-系统架构看图秒懂)
-3. [四大核心 Agent 详解](#-四大核心-agent-详解)
-4. [三语言实现对比](#-三语言实现对比)
-5. [关键代码展示](#-关键代码展示)
-6. [快速上手运行](#-快速上手运行)
-7. [API 接口文档](#-api-接口文档)
-8. [项目文件结构](#-项目文件结构)
-9. [面试资料索引](#-面试资料索引)
-10. [面试八股文精选](#-面试八股文精选10题)
-11. [简历写法（直接复制）](#-简历写法直接复制)
-12. [参考资料与致谢](#-参考资料与致谢)
 
 ---
 
@@ -42,13 +21,13 @@
 | 营销文案千篇一律 | 所有人看同一段广告语 | **文案 Agent** 根据用户画像生成个性化文案 |
 | 各系统各自为战 | 推荐、文案、库存三套系统互不感知 | **Supervisor** 统一编排，结果实时互相影响 |
 
-### 技术关键词（面试常考）
+### 技术关键词
 
 `Multi-Agent` · `Supervisor模式` · `LangGraph` · `asyncio并行` · `Redis Feature Store` · `A/B Testing` · `Thompson Sampling` · `RAG` · `ReAct` · `MiniMax LLM`
 
 ---
 
-## 🏗 系统架构（看图秒懂）
+## 🏗 系统架构
 
 ### 整体架构图
 
@@ -240,18 +219,6 @@ BANNED_WORDS = ["最好", "第一", "最便宜", "绝对", "100%"]
 
 ---
 
-## 🌐 三语言实现对比
-
-| 维度 | Python | Java | Go |
-|------|--------|------|----|
-| 框架 | [LangGraph](https://github.com/langchain-ai/langgraph) + FastAPI | [Spring AI Alibaba](https://github.com/alibaba/spring-ai-alibaba) + Spring Boot 3 | LangChainGo + Gin |
-| 并行方式 | `asyncio.gather()` | `CompletableFuture.allOf()` | `goroutine` + `sync.WaitGroup` |
-| 推荐语言 | ✅ 入门首选，代码量最少 | ✅ 企业级Java岗 | ✅ 高并发/云原生岗 |
-| 代码位置 | [`python/`](python/) | [`java/`](java/) | [`go/`](go/) |
-| 启动命令 | `python main.py` | `mvn spring-boot:run` | `go run cmd/main.go` |
-
----
-
 ## 💻 关键代码展示
 
 ### Supervisor 并行编排（Python 核心代码）
@@ -300,8 +267,6 @@ class SupervisorOrchestrator:
             total_latency_ms=total_latency,  # 目标 P99 < 2000ms
         )
 ```
-
-> 💡 **小白解读**：`asyncio.gather()` 就像你同时开了两个网页，而不是等一个加载完再开另一个。两个 Agent 并行跑，总延迟约等于最慢那个 Agent 的耗时，而不是两者相加。
 
 ---
 
@@ -380,8 +345,6 @@ class BaseAgent(ABC):
         """子类只需实现这个方法，写业务逻辑即可"""
 ```
 
-> 💡 **小白解读**：就像打电话打不通会重拨，第1次立刻重拨，第2次等2秒，第3次等4秒（指数退避）。如果全失败了，就返回一个"说得过去的默认结果"（降级），保证整个系统不崩溃。
-
 ---
 
 ### Go 版：goroutine 并行（高并发）
@@ -416,7 +379,7 @@ func (s *Supervisor) Recommend(ctx context.Context, req *model.RecommendRequest)
 
 ### 前置条件
 
-- Python 3.11+ / Java 17+ / Go 1.22+（选一个语言即可）
+- Python 3.11+ 
 - 申请 LLM API Key（推荐 [MiniMax](https://www.minimax.chat/) 或 [阿里通义](https://dashscope.aliyun.com/)，有免费额度）
 
 ---
@@ -455,63 +418,6 @@ curl -X POST http://localhost:8000/api/v1/recommend \
       "avg_order_amount": 500
     }
   }'
-```
-
----
-
-### Java 版
-
-```bash
-cd multi-agent-ecommerce-system/java
-
-# 1. 配置 API Key（编辑 src/main/resources/application.yml）
-#    找到 ecommerce.llm.api-key，填入你的 key
-
-# 2. 构建并启动（需要 Maven，可以用 IDEA 直接导入运行）
-mvn spring-boot:run
-
-# 3. 测试
-curl -X POST http://localhost:8080/api/v1/recommend \
-  -H "Content-Type: application/json" \
-  -d '{"userId": "user_001", "numItems": 5}'
-```
-
----
-
-### Go 版
-
-```bash
-cd multi-agent-ecommerce-system/go
-
-# 1. 设置环境变量
-export ECOM_LLM_API_KEY=your_api_key_here
-export ECOM_LLM_BASE_URL=https://api.minimax.chat/v1
-
-# 2. 运行
-go run cmd/main.go
-
-# 3. 测试
-curl -X POST http://localhost:8080/api/v1/recommend \
-  -H "Content-Type: application/json" \
-  -d '{"user_id": "user_001", "num_items": 5}'
-```
-
----
-
-### Docker 一键部署（含 Redis + MySQL 等依赖）
-
-```bash
-# 在项目根目录运行
-docker-compose up -d
-
-# 等待所有服务启动（约30秒）
-docker-compose ps
-
-# 服务地址
-# Python API:  http://localhost:8000
-# Java API:    http://localhost:8080
-# Redis:       localhost:6379
-# MySQL:       localhost:3306
 ```
 
 ---
@@ -590,12 +496,6 @@ multi-agent-ecommerce-system/
 ├── plan.md                            # 📋 完整项目计划（从调研到上线）
 ├── docker-compose.yml                 # 🐳 一键启动所有服务
 │
-├── docs/                              # 📚 面试全套文档
-│   ├── interview-guide.md             # 🎯 面试指南（八股文30题 + STAR法话术）
-│   ├── resume-template.md             # 📝 简历模板（应届 + 社招两版）
-│   ├── architecture.md                # 🏗 架构设计详解（含数据流图）
-│   └── code-walkthrough.md            # 🔍 代码逐行讲解（面向小白）
-│
 ├── python/                            # 🐍 Python 实现（推荐入门）
 │   ├── main.py                        # FastAPI 服务入口
 │   ├── requirements.txt               # 依赖列表
@@ -616,201 +516,7 @@ multi-agent-ecommerce-system/
 │   ├── models/schemas.py              # Pydantic 数据模型
 │   ├── config/settings.py             # 配置管理
 │   └── tests/                         # 单元测试
-│
-├── java/                              # ☕ Java 实现（企业级 Spring 生态）
-│   ├── pom.xml                        # Maven 依赖（Spring AI Alibaba）
-│   └── src/main/java/com/ecommerce/
-│       ├── MultiAgentApplication.java # Spring Boot 启动入口
-│       ├── agent/                     # 4 个 Agent（Spring Bean）
-│       ├── orchestrator/              # CompletableFuture 并行编排
-│       ├── service/                   # A/B 测试服务
-│       ├── config/                    # LLM 配置 + REST Controller
-│       └── model/                     # 数据模型（Request/Response）
-│
-└── go/                                # 🐹 Go 实现（高并发云原生）
-    ├── go.mod                         # 模块依赖
-    ├── cmd/main.go                    # 程序入口
-    ├── agent/                         # 4 个 Agent（interface + impl）
-    ├── orchestrator/supervisor.go     # goroutine + WaitGroup 并行编排
-    ├── handler/api.go                 # Gin HTTP 路由
-    ├── service/ab_test.go             # A/B 测试服务
-    └── model/types.go                 # 数据结构定义
-```
 
----
-
-## 📚 面试资料索引
-
-| 文档 | 内容亮点 | 什么时候看 |
-|------|---------|-----------|
-| [📋 面试完全指南](docs/interview-guide.md) | 八股文30题（含标准答案）+ STAR法3分钟/1分钟两版话术 + 面试官追问预案 | **面试前一天通读** |
-| [📝 简历模板](docs/resume-template.md) | 应届/社招两套模板，项目经验直接复制，按岗位调整技术栈关键词 | **投简历时参考** |
-| [🏗 架构设计文档](docs/architecture.md) | 系统架构图 + Agent职责矩阵 + 稳定性设计 + 性能数据 | **被问架构时参考** |
-| [🔍 代码讲解指南](docs/code-walkthrough.md) | 每个文件逐行解释 + 面试话术 + 常见追问应对 | **被问代码时参考** |
-
----
-
-## ❓ 面试八股文精选（10题）
-
-### Q1：为什么用 Multi-Agent 而不是单个大 Agent？
-
-> **推荐答法（30秒）**：
-> 单 Agent 管理几十个工具时，上下文膨胀、推理准确率会明显下降。Multi-Agent 的核心优势有三点：
-> 1. **上下文隔离**：每个 Agent 只关注自己领域的工具和数据，Token 消耗少、推理准确
-> 2. **并行加速**：4 个 Agent 可以同时跑，端到端延迟约等于最慢 Agent 的耗时，而不是四者相加
-> 3. **独立演进**：各 Agent 可以独立升级、独立做 A/B 测试，互不影响
-
----
-
-### Q2：Supervisor 模式和 Handoffs 模式有什么区别？
-
-> | | Supervisor 模式 | Handoffs 模式 |
-> |--|--|--|
-> | 控制方式 | 中枢集中控制 | Agent 间直接传递控制权 |
-> | 适合场景 | 流程固定，需要并行 | 对话式，流程动态 |
-> | 状态管理 | Supervisor 统一维护 | 每次交接携带上下文 |
-> | 本项目 | ✅ 采用 | ❌ 未采用 |
-
----
-
-### Q3：`asyncio.gather()` 和串行调用的区别？
-
-> ```python
-> # 串行：总耗时 = 3s + 5s = 8s
-> profile = await user_profile_agent.run()   # 耗时 3s
-> products = await product_rec_agent.run()   # 耗时 5s
->
-> # 并行：总耗时 = max(3s, 5s) = 5s
-> profile, products = await asyncio.gather(
->     user_profile_agent.run(),              # 3s
->     product_rec_agent.run(),               # 5s（同时开始）
-> )
-> ```
-> `asyncio.gather()` 适合 IO 密集型任务（调用 API、查数据库），两个任务同时"等待"，CPU 不浪费。
-
----
-
-### Q4：Redis Sorted Set 怎么做实时特征？
-
-> ```
-> # 写入：用户行为事件
-> ZADD user:u001:clicks {timestamp} {product_id}
->
-> # 读取：最近1小时的点击
-> ZRANGEBYSCORE user:u001:clicks {now-3600} {now}
->
-> # 滑动窗口统计（1h / 24h / 7d）
-> clicks_1h  = ZCOUNT user:u001:clicks {now-3600} {now}
-> clicks_24h = ZCOUNT user:u001:clicks {now-86400} {now}
-> clicks_7d  = ZCOUNT user:u001:clicks {now-604800} {now}
-> ```
-> 用 score=时间戳 的 Sorted Set，天然支持按时间范围查询，时间复杂度 O(log N)。
-
----
-
-### Q5：A/B 测试的流量分桶怎么保证一致性？
-
-> ```python
-> # 用 MD5 哈希取模 → 同一个 user_id 每次落到同一个桶
-> bucket = int(hashlib.md5(user_id.encode()).hexdigest(), 16) % 100
->
-> # 0-59  → control（60%流量）
-> # 60-79 → treatment_llm（20%流量）
-> # 80-99 → treatment_vector（20%流量）
-> ```
-> 只要 user_id 不变，分桶结果永远一致。这样同一个用户在实验期间始终体验同一套策略，保证实验结论的可靠性。
-
----
-
-### Q6：Thompson Sampling 怎么动态调流量？
-
-> 核心思想：哪个实验组赢得多，就自动给它更多流量（像"站在赢家那边"）。
->
-> ```python
-> # 每个实验组维护 Beta 分布参数
-> alpha = {"control": 100, "treatment": 80}   # 点击次数
-> beta  = {"control": 50,  "treatment": 20}   # 未点击次数
->
-> # 分配流量时，从各组的 Beta 分布采样，取最大值的组
-> samples = {group: np.random.beta(alpha[g], beta[g]) for g in groups}
-> winner = max(samples, key=samples.get)
-> # CTR 越高的组，采样值越大，被选中概率越高
-> ```
-
----
-
-### Q7：Agent 调用失败怎么处理？
-
-> 三层保障：
-> 1. **超时控制**：`asyncio.wait_for(coro, timeout=5)` — 每个 Agent 独立超时，不阻塞整体
-> 2. **指数退避重试**：失败后等 1s → 2s → 4s 重试，共 3 次
-> 3. **降级（Fallback）**：全部重试失败后，返回"说得过去的默认结果"（如热门商品列表），保证整个系统不崩溃
-
----
-
-### Q8：LangGraph 和直接写 `asyncio.gather()` 有什么区别？
-
-> | | LangGraph | 直接写 asyncio |
-> |--|--|--|
-> | 状态管理 | 内置 State，节点间自动传递 | 手动管理变量 |
-> | 持久化 | 内置 Checkpoint，支持断点续跑 | 需要自己实现 |
-> | 可视化 | 可以画出状态图 | 无 |
-> | Human-in-the-loop | 内置支持，可以在节点暂停等人工确认 | 需要自己实现 |
-> | 适合场景 | 复杂、有分支的工作流 | 简单并行任务 |
-
----
-
-### Q9：RFM 模型怎么计算？
-
-> ```
-> R (Recency)  = 距离上次购买的天数    → 越小越好（最近买过）
-> F (Frequency)= 一定周期内购买次数    → 越大越好（买的勤）
-> M (Monetary) = 累计消费金额          → 越大越好（花的多）
->
-> # 归一化到 0-1，加权求和
-> rfm_score = 0.3 * R_norm + 0.3 * F_norm + 0.4 * M_norm
->
-> # 用于分群：
-> VIP:          rfm_score > 0.8
-> 活跃用户:     0.6 < rfm_score ≤ 0.8
-> 价格敏感:     高 F，低 M（买的勤但花得少）
-> 流失风险:     rfm_score < 0.3
-> ```
-
----
-
-### Q10：系统延迟怎么优化到 P99 < 2s？
-
-> 四个优化手段：
-> 1. **并行化**：Phase1 和 Phase2 各两个 Agent 并行，节省约 50% 时间
-> 2. **超时熔断**：单 Agent 超时不等待，返回降级结果，避免长尾拖累
-> 3. **Redis 缓存**：用户画像热点数据缓存，命中率 > 80% 的情况下延迟从 200ms → 5ms
-> 4. **LLM 精简**：Prompt 控制在 500 Token 以内，减少 LLM 推理时间
-
-👉 **更多30题详见** [docs/interview-guide.md](docs/interview-guide.md)
-
----
-
-## 📋 简历写法（直接复制）
-
-```
-多Agent电商推荐与营销系统 | 个人项目 | 2026.01 - 2026.04
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-• 设计并实现基于 Supervisor 模式的多 Agent 协同架构，含用户画像、商品推荐、
-  营销文案、库存决策 4 个专业 Agent，采用并行分发+聚合的编排模式
-
-• 基于 Redis Sorted Set 实现实时用户特征工程（RFM 模型+行为序列），
-  特征更新延迟 < 100ms，支持 1h/24h/7d 多时间窗口滑动计算
-
-• 集成 LLM 实现个性化营销文案生成，基于用户画像动态切换 5 套 Prompt 模板，
-  文案合规率 100%（广告法敏感词自动过滤）
-
-• 设计流量分桶 + Thompson Sampling A/B 测试引擎，支持 Agent/模型/Prompt
-  三层实验，推荐 CTR 提升 15%，文案点击率提升 23%
-
-• 提供 Python(LangGraph) / Java(Spring AI Alibaba) / Go(goroutine) 三语言实现
-
-技术栈：LangGraph · Spring AI Alibaba · Go · Redis · Milvus · FastAPI · Docker
 ```
 
 ---
@@ -839,7 +545,5 @@ multi-agent-ecommerce-system/
 <div align="center">
 
 **如果这个项目对你有帮助，欢迎点个 ⭐ Star！**
-
-有问题欢迎提 [Issue](https://github.com/bcefghj/multi-agent-ecommerce-system/issues)
 
 </div>
